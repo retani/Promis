@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { NavController, ActionSheetController } from 'ionic-angular';
 import { Video } from 'api/models'
 import { MongoObservable } from 'meteor-rxjs';
 
@@ -13,11 +13,47 @@ export class ListPage {
 
   videos;
 
-  constructor(public navCtrl: NavController) {
-  }
+  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController) {}
 
   ngOnInit() {
     this.videos = Videos.find({}).zone()
   }
+
+   presentActionSheet(id:string) {
+   	console.log(id)
+   	let actionSheet = this.actionSheetCtrl.create({
+     buttons: [
+       {
+         text: 'Transcode',
+         handler: () => {
+           console.log('Transcode clicked');
+         }
+       },
+       {
+         text: 'Upload',
+         handler: () => {
+           console.log('Upload clicked');
+         }
+       },
+       {
+         text: 'Remove',
+         handler: () => {
+           console.log('Remove clicked');
+         }
+       },
+       {
+         text: 'Cancel',
+         role: 'cancel',
+         handler: () => {
+           console.log('Cancel clicked');
+         }
+       }
+     ]
+   });
+
+   actionSheet.present();
+ }
+
+
 
 }

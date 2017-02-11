@@ -8,7 +8,7 @@
     "build": "ionic-app-scripts build",
     "ionic:build": "ionic-app-scripts build",
     "ionic:serve": "ionic-app-scripts serve",
-    "meteor-client:bundle": "meteor-client bundle -s api"
+    "meteor-client:bundle": "meteor-client bundle -s api --url http://192.168.1.18:3000/"
   },
   "dependencies": {
     "@angular/common": "2.2.1",

@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
-
 import { NavController } from 'ionic-angular';
+import { Video } from 'api/models'
+import { MongoObservable } from 'meteor-rxjs';
+
+const Videos = new MongoObservable.Collection<Video>('videos');
 
 @Component({
   selector: 'page-list',
@@ -11,7 +14,10 @@ export class ListPage {
   videos;
 
   constructor(public navCtrl: NavController) {
-  	this.videos = [{title: "video 1"}, {title: "video 2"}];
+  }
+
+  ngOnInit() {
+    this.videos = Videos.find({}).zone()
   }
 
 }

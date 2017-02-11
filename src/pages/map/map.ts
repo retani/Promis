@@ -20,11 +20,7 @@ export class MapPage {
   }
  
   loadMap(){
-
-  	console.log("loading map...")
- 
-    let latLng = new google.maps.LatLng(-34.9290, 138.6010);
- 
+    let latLng = new google.maps.LatLng(-34.9290, 138.6010); 
     let mapOptions = {
       center: latLng,
       zoom: 15,
@@ -33,8 +29,6 @@ export class MapPage {
       fullscreenControl: false,
       zoomControl: false
     }
- 
     this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
- 
   }
 }

@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { NavController, ActionSheetController } from 'ionic-angular';
-import { Video } from 'api/models'
-import { MongoObservable } from 'meteor-rxjs';
-
-const Videos = new MongoObservable.Collection<Video>('videos');
+import { VideosCollection } from 'api/collections';
+import { Ground } from 'meteor/ground:db'
+import { MeteorObservable } from 'meteor-rxjs';
 
 @Component({
   selector: 'page-list',
@@ -12,11 +11,30 @@ const Videos = new MongoObservable.Collection<Video>('videos');
 export class ListPage {
 
   videos;
-
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController) {}
+  offlineVideos;
+  
+  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController) {
+  }
 
   ngOnInit() {
-    this.videos = Videos.find({}).zone()
+    this.offlineVideos = new Ground.Collection('offlineVideos');    
+
+    MeteorObservable.autorun().subscribe(() => {
+
+      if(Meteor.status().status.toString() == "connected") {
+        console.log("online mode")
+        this.videos = VideosCollection.find({}).fetch(); // fetch videos from server for view
+        this.offlineVideos.observeSource(VideosCollection.find({})); // copy server db to local cache
+      }
+
+      if(Meteor.status().status.toString() == "waiting") {
+        console.log("offline mode")
+        this.offlineVideos.stopObserver(); // connection lost, keep local db active
+        this.videos = this.offlineVideos.find({}).fetch(); // use old videos
+      }        
+
+    });
+    
   }
 
    presentActionSheet(id:string) {

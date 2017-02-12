@@ -18,6 +18,9 @@ export class MyApp {
       if(platform.is('cordova')) {        
         StatusBar.styleDefault();
         Splashscreen.hide();
+
+
+        
       }
     });
   }

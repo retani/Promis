@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 import { NavController, ActionSheetController } from 'ionic-angular';
-import { VideosCollection } from 'api/collections';
-import { Ground } from 'meteor/ground:db'
 import { MeteorObservable } from 'meteor-rxjs';
 import { VideoPlayer } from 'ionic-native';
 import { AlertController } from 'ionic-angular';
+import { StorageManager } from '../../services/storage-manager';
 
 @Component({
   selector: 'page-list',
@@ -13,37 +12,23 @@ import { AlertController } from 'ionic-angular';
 export class ListPage {
 
   videos;
-  offlineVideos;
-  
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController,  public alertCtrl: AlertController) {
+
+  constructor(
+    public navCtrl: NavController, 
+    public actionSheetCtrl: ActionSheetController,  
+    public alertCtrl: AlertController,
+    private storageManager: StorageManager) {
   }
 
   ngOnInit() {
-    this.offlineVideos = new Ground.Collection('offlineVideos');    
-
-    MeteorObservable.autorun().subscribe(() => {
-
-      if(Meteor.status().status.toString() == "connected") {
-        console.log("online mode")
-        this.videos = VideosCollection.find({}).fetch(); // fetch videos from server for view
-        this.offlineVideos.observeSource(VideosCollection.find({})); // copy server db to local cache
-      }
-
-      if(Meteor.status().status.toString() == "waiting") {
-        console.log("offline mode")
-        this.offlineVideos.stopObserver(); // connection lost, keep local db active
-        this.videos = this.offlineVideos.find({}).fetch(); // use old videos
-      }        
-
-    });
-    
+    this.videos = this.storageManager.getVideos();
   }
 
   playVideo(id:string) {
-     let video = VideosCollection.findOne(id);
+     let video = this.storageManager.getVideo(id)
      console.log(video);
-     if(video.fullPath) {
-        VideoPlayer.play(video.fullPath).then(() => {
+     if(video.localPath) {
+        VideoPlayer.play(video.localPath).then(() => {
            console.log('video completed');
         }).catch(err => {
            console.log(err);
@@ -79,7 +64,10 @@ export class ListPage {
                   text: 'Ok',
                   handler: () => {
                     console.log('Remove clicked');
-                     MeteorObservable.call('removeVideo', id)
+                    MeteorObservable.call('removeVideo', id).subscribe({
+                      next: () => console.log("remove complete"),
+                      error: (err: Error) => console.log(err.toString())
+                    });
                   }
                 },
                 {

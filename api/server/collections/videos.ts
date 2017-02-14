@@ -1,5 +1,4 @@
 import { MongoObservable } from 'meteor-rxjs';
-import { Video } from '../models';
+import { LocalVideo } from '../models';
 
-export const VideosCollection = new Mongo.Collection<Video>('videos');
-export const Videos = new MongoObservable.Collection(VideosCollection);
+export const LocalVideos = new MongoObservable.Collection<LocalVideo>('localvideos');

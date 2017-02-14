@@ -1,13 +1,12 @@
-import { Videos } from './collections'
+import { LocalVideos } from './collections'
 
 Meteor.methods({
-   createVideo(fullPath: string): void {
-   		Videos.collection.insert({
-  			fullPath: fullPath
+   createVideo(localPath: string): void {
+   		LocalVideos.collection.insert({
+  			localPath: localPath
     	});
    },
    removeVideo(id: string): void {
-   		let video = Videos.findOne(id)
-   		Videos.collection.remove({_id: id})
+   		LocalVideos.collection.remove({_id: id})
    }
 });

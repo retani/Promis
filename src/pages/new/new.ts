@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { MediaCapture, MediaFile, CaptureError, CaptureVideoOptions } from 'ionic-native';
 import { AlertController } from 'ionic-angular';
-import { MeteorObservable } from 'meteor-rxjs';
+import { StorageManager } from '../../services/storage-manager';
 
 @Component({
   selector: 'page-new',
@@ -10,18 +10,17 @@ import { MeteorObservable } from 'meteor-rxjs';
 })
 export class NewPage {
 
-  constructor(public navCtrl: NavController, public alertCtrl: AlertController) {
+  constructor(
+    public navCtrl: NavController, 
+    public alertCtrl: AlertController,
+    private storageManager: StorageManager) {
   }
 
   doCapture() {
 	  let options: CaptureVideoOptions = { limit: 1 };
 	  MediaCapture.captureVideo(options).then(
     	(data: MediaFile[]) => {
-    		let fullPath = data[0].fullPath;
-			  MeteorObservable.call('createVideo', fullPath).subscribe({
-          next: () => this.showMessage("Sucess", "saved video to " + fullPath),
-          error: (err: Error) => this.showMessage("Error", err.toString())
-        });
+			  this.storageManager.addVideo(data[0].fullPath);
     	},
     	(err: CaptureError) => this.showMessage("Error", err.toString())
   	);

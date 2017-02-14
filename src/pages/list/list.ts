@@ -3,6 +3,7 @@ import { NavController, ActionSheetController } from 'ionic-angular';
 import { VideosCollection } from 'api/collections';
 import { Ground } from 'meteor/ground:db'
 import { MeteorObservable } from 'meteor-rxjs';
+import { VideoPlayer } from 'ionic-native';
 
 @Component({
   selector: 'page-list',
@@ -37,7 +38,19 @@ export class ListPage {
     
   }
 
-   presentActionSheet(id:string) {
+  playVideo(id:string) {
+     let video = VideosCollection.findOne(id);
+     console.log(video);
+     if(video.fullPath) {
+        VideoPlayer.play(video.fullPath).then(() => {
+           console.log('video completed');
+        }).catch(err => {
+           console.log(err);
+        });
+     }
+  }
+
+  presentActionSheet(id:string) {
    	console.log(id)
    	let actionSheet = this.actionSheetCtrl.create({
      buttons: [

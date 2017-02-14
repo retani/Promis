@@ -4,6 +4,7 @@ import { VideosCollection } from 'api/collections';
 import { Ground } from 'meteor/ground:db'
 import { MeteorObservable } from 'meteor-rxjs';
 import { VideoPlayer } from 'ionic-native';
+import { AlertController } from 'ionic-angular';
 
 @Component({
   selector: 'page-list',
@@ -14,7 +15,7 @@ export class ListPage {
   videos;
   offlineVideos;
   
-  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController) {
+  constructor(public navCtrl: NavController, public actionSheetCtrl: ActionSheetController,  public alertCtrl: AlertController) {
   }
 
   ngOnInit() {
@@ -61,7 +62,7 @@ export class ListPage {
          }
        },
        {
-         text: 'Upload',
+         text: 'Upload/Download',
          handler: () => {
            console.log('Upload clicked');
          }
@@ -69,7 +70,28 @@ export class ListPage {
        {
          text: 'Remove',
          handler: () => {
-           console.log('Remove clicked');
+
+            let confirm = this.alertCtrl.create({
+              title: 'Confirm',
+              message: 'Remove this video?',
+              buttons: [
+                {
+                  text: 'Ok',
+                  handler: () => {
+                    console.log('Remove clicked');
+                     MeteorObservable.call('removeVideo', id)
+                  }
+                },
+                {
+                  text: 'Cancel',
+                  handler: () => {
+                    console.log('cancel')
+                  }
+                }
+              ]
+              });
+              confirm.present();
+           
          }
        },
        {

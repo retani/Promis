@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-
 import { ListPage } from '../list/list';
 import { MapPage } from '../map/map';
 import { NewPage } from '../new/new';

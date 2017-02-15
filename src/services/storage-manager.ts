@@ -1,44 +1,35 @@
 import { Injectable } from '@angular/core';
-import { LocalVideos } from 'api/connections'
-import { MeteorObservable } from 'meteor-rxjs';
-import { Ground } from 'meteor/ground:db'
+import { MongoObservable } from 'meteor-rxjs';
+import { LocalVideo } from 'api/models';
+import { LocalPersist } from 'meteor/jeffm:local-persist'
 
 @Injectable()
 export class StorageManager {
   
   private localVideos;
-
+  private localVideosObserver;
+  
   constructor() {
-    this.localVideos = new Ground.Collection('localVideos');
-    this.localVideos.observeSource(LocalVideos.find());
+    this.localVideos = new MongoObservable.Collection<LocalVideo>('localvideos', {connection: null});
+    this.localVideosObserver = new LocalPersist(this.localVideos.collection, 'promis-localvideos');
+  }
+
+  get videos() {
+    return this.localVideos.find({});
+  }
+ 
+  addVideo(path) {
+    this.localVideos.collection.insert({
+      localPath: path
+    });    
   }
 
   getVideo(id: string) {
-    return this.localVideos.findOne(id);
+    return this.localVideos.collection.findOne(id);
   }
 
-  getVideos() {
-    if(Meteor.status().status.toString() == "connected") {
-      return LocalVideos.find({}).fetch()
-    } else {
-      return this.localVideos.find({}).fetch();  
-    }
+  removeVideo(id: string) {
+    this.localVideos.collection.remove({_id: id})
   }
-
-  addVideo(path) {
-    MeteorObservable.call('createVideo', path).subscribe({
-      next: () => console.log("success"),
-      error: (err: Error) => console.log(err)
-    });
-  }
-
-  removeVideo(id) {
-    MeteorObservable.call('removeVideo', id).subscribe({
-      next: () => console.log("sucecss"),
-      error: (err: Error) => console.log(err)
-    });
-  }
-  
-
   
 }

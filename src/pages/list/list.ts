@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
-import { NavController, ActionSheetController } from 'ionic-angular';
-import { MeteorObservable } from 'meteor-rxjs';
+import { NavController, ActionSheetController, AlertController } from 'ionic-angular';
 import { VideoPlayer } from 'ionic-native';
-import { AlertController } from 'ionic-angular';
 import { StorageManager } from '../../services/storage-manager';
 
 @Component({
@@ -21,7 +19,7 @@ export class ListPage {
   }
 
   ngOnInit() {
-    this.videos = this.storageManager.getVideos();
+    this.videos = this.storageManager.videos.zone();
   }
 
   playVideo(id:string) {
@@ -43,13 +41,13 @@ export class ListPage {
        {
          text: 'Transcode',
          handler: () => {
-           console.log('Transcode clicked');
+           console.log('transcode clicked');
          }
        },
        {
          text: 'Upload/Download',
          handler: () => {
-           console.log('Upload clicked');
+           console.log('upload clicked');
          }
        },
        {
@@ -63,11 +61,8 @@ export class ListPage {
                 {
                   text: 'Ok',
                   handler: () => {
-                    console.log('Remove clicked');
-                    MeteorObservable.call('removeVideo', id).subscribe({
-                      next: () => console.log("remove complete"),
-                      error: (err: Error) => console.log(err.toString())
-                    });
+                    console.log('remove clicked');
+                    this.storageManager.removeVideo(id)
                   }
                 },
                 {
@@ -86,7 +81,7 @@ export class ListPage {
          text: 'Cancel',
          role: 'cancel',
          handler: () => {
-           console.log('Cancel clicked');
+           console.log('cancel clicked');
          }
        }
      ]

@@ -20,12 +20,17 @@ export class StorageManager {
  
   addVideo(path) {
     this.localVideos.collection.insert({
-      localPath: path
+      originalPath: path,
+      transcoded: false
     });    
   }
 
   getVideo(id: string) {
     return this.localVideos.collection.findOne(id);
+  }
+
+  updateVideo(video: LocalVideo) {
+    this.localVideos.collection.update({_id: video._id}, video);
   }
 
   removeVideo(id: string) {

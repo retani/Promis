@@ -1,4 +1,7 @@
 export interface LocalVideo {
 	_id?: string;
- 	localPath?: string;	
+ 	originalPath?: string;	
+ 	transcodeProgress?:number;
+ 	transcoded?:boolean;
+ 	transcodedPath?: string;
 }

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { NavController } from 'ionic-angular';
 import { MediaCapture, MediaFile, CaptureError, CaptureVideoOptions } from 'ionic-native';
 import { AlertController, Platform } from 'ionic-angular';
-import { StorageManager } from '../../services/storage-manager';
+import { VideoManager } from '../../services/video-manager';
 import { LocalVideo } from 'api/models';
 declare var device: any;
 
@@ -15,7 +15,7 @@ export class NewPage {
   constructor(
     public navCtrl: NavController, 
     public alertCtrl: AlertController,
-    private storageManager: StorageManager,
+    private videoManager: VideoManager,
     public platform: Platform) {
   }
 
@@ -32,7 +32,7 @@ export class NewPage {
             system: system + '@ ' + device.version
           }
           console.log(JSON.stringify(video));
-  			  this.storageManager.addVideo(video);
+  			  this.videoManager.addVideo(video);
       	},
       	(err: CaptureError) => this.showMessage("Error", err.toString())
     	);

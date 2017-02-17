@@ -1,5 +1,6 @@
 export interface LocalVideo {
 	_id?: string;
+ 	filename?: string;
  	originalPath?: string;	
  	transcodeProgress?:number;
  	transcoded?:boolean;

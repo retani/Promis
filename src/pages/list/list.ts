@@ -3,6 +3,7 @@ import { NavController, ActionSheetController, AlertController } from 'ionic-ang
 import { VideoPlayer, VideoEditor } from 'ionic-native';
 import { StorageManager } from '../../services/storage-manager';
 import { LocalVideo } from 'api/models';
+import { MongoObservable } from 'meteor-rxjs';
 declare var S3:any;
 declare var window:any;
 
@@ -13,7 +14,7 @@ declare var window:any;
 export class ListPage {
 
   videos;
-  //s3Uploads;
+  s3Uploads;
 
   constructor(
     public navCtrl: NavController, 
@@ -23,8 +24,19 @@ export class ListPage {
   }
 
   ngOnInit() {
-    this.videos = this.storageManager.videos.zone();
-    //this.s3Uploads = new MongoObservable.Collection(S3.files);
+    this.videos = this.storageManager.videos.find({}).zone();
+
+    // observe uploads collection in S3 package and transfer upload progress
+    this.s3Uploads = new MongoObservable.Collection(S3.collection);
+    this.s3Uploads.find({})
+    .subscribe(files => {
+      files.forEach((file) => {
+        let video = this.storageManager.findVideo({filename: file.file.original_name})
+        video.uploadProgress = file.percent_uploaded;
+        this.storageManager.updateVideo(video);
+      });  
+    });
+
   }
 
   playVideo(id:string) {
@@ -139,9 +151,12 @@ export class ListPage {
 
   uploadVideo(id:string) {
     let video = this.storageManager.getVideo(id)
+    let self = this;
     window.resolveLocalFileSystemURL("file://" + video.transcodedPath, 
       function(fileEntry) {
         fileEntry.file(function(file) {
+          video.filename = file.name;
+          self.storageManager.updateVideo(video);
           var xhr = new XMLHttpRequest();
           xhr.open(
           /* method */ "GET",
@@ -159,8 +174,16 @@ export class ListPage {
               path:"videos"
             }, function(e, r) {
                 console.log("S3 callback")
-                console.log(JSON.stringify(e));
-                console.log(JSON.stringify(r));
+                if(e) {
+                  console.log(JSON.stringify(e));  
+                } else {
+                  console.log(JSON.stringify(r));
+                  // update local video
+                  video.uploaded = true;
+                  self.storageManager.updateVideo(video);
+
+                  // todo: create remote video object
+                }                
             });
           }
           xhr.send(null);          

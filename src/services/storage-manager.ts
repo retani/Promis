@@ -15,7 +15,7 @@ export class StorageManager {
   }
 
   get videos() {
-    return this.localVideos.find({});
+    return this.localVideos;
   }
  
   addVideo(video: LocalVideo) {
@@ -25,6 +25,10 @@ export class StorageManager {
 
   getVideo(id: string) {
     return this.localVideos.collection.findOne(id);
+  }
+
+  findVideo(query) {
+    return this.localVideos.collection.findOne(query);
   }
 
   updateVideo(video: LocalVideo) {

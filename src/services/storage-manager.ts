@@ -18,11 +18,9 @@ export class StorageManager {
     return this.localVideos.find({});
   }
  
-  addVideo(path) {
-    this.localVideos.collection.insert({
-      originalPath: path,
-      transcoded: false
-    });    
+  addVideo(video: LocalVideo) {
+    video.transcoded = false;
+    this.localVideos.collection.insert(video);    
   }
 
   getVideo(id: string) {

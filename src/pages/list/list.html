@@ -9,12 +9,14 @@
     <ion-card *ngFor="let video of videos | async">
       <ion-card-header>{{video._id}}</ion-card-header>
       <ion-card-content>
-        <p>transcoded: {{video.transcoded ? "done" : (video.transcodeProgress ? video.transcodeProgress : "0") }}</p>
+        <p>
+          <span>transcoded: {{video.transcoded ? "done" : (video.transcodeProgress ? video.transcodeProgress : "no") }}</span>, 
+          <span>uploaded: {{video.uploaded ? "done" : (video.uploadProgress ? video.uploadProgress : "no")  }}</span>       
+        </p>
         <button ion-button small (click)="playVideo(video._id)">play</button>
         <button ion-button small (click)="presentActionSheet(video._id)">options</button>
       </ion-card-content>
     
     </ion-card>
   </ion-list>
-  
 </ion-content>

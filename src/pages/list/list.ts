@@ -2,7 +2,9 @@ import { Component } from '@angular/core';
 import { NavController, ActionSheetController, AlertController } from 'ionic-angular';
 import { VideoPlayer, VideoEditor } from 'ionic-native';
 import { StorageManager } from '../../services/storage-manager';
-import { LocalVideo } from 'api/models'
+import { LocalVideo } from 'api/models';
+declare var S3:any;
+declare var window:any;
 
 @Component({
   selector: 'page-list',
@@ -11,6 +13,7 @@ import { LocalVideo } from 'api/models'
 export class ListPage {
 
   videos;
+  //s3Uploads;
 
   constructor(
     public navCtrl: NavController, 
@@ -21,6 +24,7 @@ export class ListPage {
 
   ngOnInit() {
     this.videos = this.storageManager.videos.zone();
+    //this.s3Uploads = new MongoObservable.Collection(S3.files);
   }
 
   playVideo(id:string) {
@@ -54,9 +58,9 @@ export class ListPage {
          }
        },
        {
-         text: 'Upload/Download',
+         text: 'Upload',
          handler: () => {
-           console.log('upload clicked');
+           this.uploadVideo(id)
          }
        },
        {
@@ -131,6 +135,42 @@ export class ListPage {
         this.storageManager.updateVideo(video);
       })
       .catch((error: any) => console.log('video transcode error ' + JSON.stringify(error)));
+  }
+
+  uploadVideo(id:string) {
+    let video = this.storageManager.getVideo(id)
+    window.resolveLocalFileSystemURL("file://" + video.transcodedPath, 
+      function(fileEntry) {
+        fileEntry.file(function(file) {
+          var xhr = new XMLHttpRequest();
+          xhr.open(
+          /* method */ "GET",
+          /* file */ video.transcodedPath,
+          /* async */ true
+          );
+          xhr.responseType = "arraybuffer";
+          xhr.onload = function(evt) {
+            var blob = new Blob([xhr.response], {type: file.type});
+            blob['name'] = file.name;
+            console.log("attempting upload with");
+            console.log(JSON.stringify(blob));
+            S3.upload({
+              files:[blob],
+              path:"videos"
+            }, function(e, r) {
+                console.log("S3 callback")
+                console.log(JSON.stringify(e));
+                console.log(JSON.stringify(r));
+            });
+          }
+          xhr.send(null);          
+        });
+      },
+      function(e) {
+        console.log(JSON.stringify(e));
+      }
+    );
+
   }
 
 }

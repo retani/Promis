@@ -3,7 +3,7 @@ import { NavController, ActionSheetController, AlertController } from 'ionic-ang
 import { VideoPlayer } from 'ionic-native';
 import { VideoManager } from '../../services/video-manager';
 import { LocalVideo } from 'api/models';
-import {Observable} from 'rxjs';
+import { Observable } from 'rxjs';
 declare var device: any;
 
 @Component({
@@ -24,10 +24,10 @@ export class ListPage {
 
   ngOnInit() {
     this.videos = this.videoManager.videos.find({$or: [{originalPath: {$exists: true}}, {downloaded: true}]})
-      .sample(Observable.interval(250))
+      .sample(Observable.interval(500))
       .zone();
     this.remoteVideos = this.videoManager.remoteVideos.find({})
-      .sample(Observable.interval(250))
+      .sample(Observable.interval(500))
       .zone();
   }
 

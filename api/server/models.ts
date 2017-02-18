@@ -1,5 +1,7 @@
 export interface LocalVideo {
 	_id?: string;
+	title?:string;
+	thumbPath?: string;
 
 	deviceUuid?: string;
  	system?: string;
@@ -21,12 +23,16 @@ export interface LocalVideo {
 
 export interface RemoteVideo {
 	_id?: string;
+	title?:string;
 	
 	url?: string;
 	relativeUrl?: string;
  	filename?: string;	
  	type?: string;
  	size?: number;
+
+ 	thumbUrl?: string;
+ 	thumbFilename?: string;
 
  	deviceUuid?: string;
  	system?: string;

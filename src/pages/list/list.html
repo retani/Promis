@@ -8,7 +8,8 @@
   <ion-item-group>
     <ion-item-divider color="light">Videos on device</ion-item-divider>
     <ion-card *ngFor="let video of videos | async">
-      <ion-card-header>{{video._id}}</ion-card-header>
+      <img class="video-thumbnail" src="{{video.thumbPath}}"/>
+      <ion-card-header>{{video.title ? video.title : video._id}}</ion-card-header>
       <ion-card-content>
         <p>
           <span>transcoded: {{video.transcoded ? "done" : (video.transcodeProgress ? video.transcodeProgress : "no") }}</span>, 
@@ -24,7 +25,8 @@
   <ion-item-group>
     <ion-item-divider color="light">Remote videos</ion-item-divider>
     <ion-card *ngFor="let remoteVideo of remoteVideos | async">
-      <ion-card-header>{{remoteVideo._id}}</ion-card-header>
+      <img class="video-thumbnail" src="{{remoteVideo.thumbUrl}}"/>
+      <ion-card-header>{{remoteVideo.title ? remoteVideo.title : remoteVideo._id}}</ion-card-header>
       <ion-card-content>
         <button *ngIf="!downloaded(remoteVideo._id)" ion-button small (click)="this.videoManager.downloadRemote(remoteVideo._id)">download</button>
         <button *ngIf="checkLocalAuthor(remoteVideo._id)" ion-button small (click)="removeRemote(remoteVideo._id)">remove</button>

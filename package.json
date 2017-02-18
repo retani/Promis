@@ -8,7 +8,7 @@
     "build": "ionic-app-scripts build",
     "ionic:build": "ionic-app-scripts build",
     "ionic:serve": "ionic-app-scripts serve",
-    "meteor-client:bundle": "meteor-client bundle -s api --url http://192.168.0.12:3000"
+    "meteor-client:bundle": "meteor-client bundle -s api --url https://cryptic-beach-81693.herokuapp.com"
   },
   "dependencies": {
     "@angular/common": "2.2.1",

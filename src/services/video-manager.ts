@@ -4,6 +4,7 @@ import { MongoObservable } from 'meteor-rxjs';
 import { LocalVideo } from 'api/models';
 import { LocalPersist } from 'meteor/jeffm:local-persist'
 import { RemoteVideos } from 'api/collections'
+import { Observable } from 'rxjs';
 declare var S3:any;
 declare var window: any;
 declare var cordova: any;
@@ -23,11 +24,16 @@ export class VideoManager {
     // observe uploads collection in S3 package and transfer upload progress
     this.s3Uploads = new MongoObservable.Collection(S3.collection);
     this.s3Uploads.find({})
+    .sample(Observable.interval(500))
     .subscribe(files => {
       files.forEach((file) => {
-        let video = this.findVideo({filename: file.file.original_name})
-        video.uploadProgress = file.percent_uploaded;
-        this.updateVideo(video);
+        if(file.type == "video/mp4") {
+          let video = this.findVideo({filename: file.file.original_name})
+          if(video) {
+            video.uploadProgress = file.percent_uploaded;
+            this.updateVideo(video);    
+          }
+        }
       });  
     });
   }
@@ -42,7 +48,20 @@ export class VideoManager {
 
   addVideo(video: LocalVideo) {
     video.transcoded = false;
-    this.localVideos.collection.insert(video);    
+    let videoId = this.localVideos.collection.insert(video);
+
+    VideoEditor.createThumbnail({
+      fileUri: video.originalPath, // the path to the video on the device
+      outputFileName: videoId + "_thumb", // the file name for the JPEG image
+      atTime: 1, // optional, location in the video to create the thumbnail (in seconds)
+      width: 480, // optional, width of the thumbnail
+      height: 320, // optional, height of the thumbnail
+      quality: 100 // optional, quality of the thumbnail (between 1 and 100)
+    }).then(thumbPath => {
+      console.log(JSON.stringify(thumbPath));
+      this.localVideos.collection.update({_id: videoId}, {$set: {thumbPath: thumbPath}});
+    });
+
   }
 
   getVideo(id: string) {
@@ -104,18 +123,22 @@ export class VideoManager {
       .catch((error: any) => console.log('video transcode error ' + JSON.stringify(error)));
   }
 
-  uploadVideo(id:string) {
-    let video = this.getVideo(id)
-    let self = this;
-    window.resolveLocalFileSystemURL("file://" + video.transcodedPath, 
+  uploadFileS3(
+    localPath: string,
+    remotePath: string,
+    prepare: any,
+    callback: any,
+    ) {
+    window.resolveLocalFileSystemURL("file://" + localPath, 
       function(fileEntry) {
         fileEntry.file(function(file) {
-          video.filename = file.name;
-          self.updateVideo(video);
+          if(typeof prepare == "function") {
+            prepare(file);  
+          }
           var xhr = new XMLHttpRequest();
           xhr.open(
           /* method */ "GET",
-          /* file */ video.transcodedPath,
+          /* file */ localPath,
           /* async */ true
           );
           xhr.responseType = "arraybuffer";
@@ -125,30 +148,17 @@ export class VideoManager {
             console.log("attempting upload with");
             console.log(JSON.stringify(blob));
             S3.upload({
-              files:[blob],
-              path:"videos"
+              files: [blob],
+              path: remotePath
             }, function(e, r) {
                 console.log("S3 callback")
                 if(e) {
                   console.log(JSON.stringify(e));  
                 } else {
                   console.log(JSON.stringify(r));
-                  // create remote video object
-                  let remoteId = RemoteVideos.collection.insert({
-                    url: r.url,
-                    relativeUrl: r.relative_url,
-                    filename: r.file.name,
-                    type: r.file.type,
-                    size: r.file.size,                    
-                    deviceUuid: video.deviceUuid,
-                    system: video.system
-                  });
-
-                  // update local video
-                  video.uploaded = true;
-                  video.downloaded = true;
-                  video.remoteId = remoteId;
-                  self.updateVideo(video);
+                  if(typeof callback == "function") {
+                    callback(r);
+                  }
                 }                
             });
           }
@@ -159,7 +169,47 @@ export class VideoManager {
         console.log(JSON.stringify(e));
       }
     );
+  }
 
+  uploadVideo(id:string) {
+    let video = this.getVideo(id);
+    let self = this;    
+    self.uploadFileS3(
+      video.transcodedPath,
+      "videos",
+      function(file) {
+        video.filename = file.name;
+        self.updateVideo(video);
+      },
+      function(r) {
+        // upload thumbnail
+        self.uploadFileS3(
+          video.thumbPath,
+          "thumbnails",
+          null,
+          function(r_thumb) {
+            // create remote video object
+            let remoteId = RemoteVideos.collection.insert({
+              url: r.url,
+              relativeUrl: r.relative_url,
+              filename: r.file.name,
+              type: r.file.type,
+              size: r.file.size,                    
+              deviceUuid: video.deviceUuid,
+              system: video.system,
+              title: video.title,
+              thumbUrl: r_thumb.url,
+              thumbFilename: r_thumb.file.name,
+            });
+            // update local video
+            video.uploaded = true;
+            video.downloaded = true;
+            video.remoteId = remoteId;
+            self.updateVideo(video);
+          }
+        );
+      }
+    );
   }
 
   downloadRemote(id) {
@@ -168,6 +218,7 @@ export class VideoManager {
     
     let localId = this.localVideos.collection.insert({
         remoteId: id,
+        title: rv.title,
 
         deviceUuid: rv.deviceUuid,
         system: rv.system,
@@ -194,13 +245,16 @@ export class VideoManager {
       }
     })
     fileTransfer.download(url, cordova.file.dataDirectory + rv.filename).then((entry) => {
-      console.log('download complete: ' + entry.toURL());
-
-      lv.transcoded = true;
-      lv.transcodedPath = entry.toURL();        
-      lv.downloaded = true;
-      this.updateVideo(lv);
-      
+      fileTransfer.download(rv.thumbUrl, cordova.file.dataDirectory + rv.thumbFilename).then((entryThumb) => {
+        console.log('download complete: ' + entry.toURL());
+        lv.transcoded = true;
+        lv.transcodedPath = entry.toURL();        
+        lv.downloaded = true;
+        lv.thumbPath = entryThumb.toURL();
+        this.updateVideo(lv);
+      }, (error) => {
+        // handle error
+      });    
     }, (error) => {
       // handle error
     });

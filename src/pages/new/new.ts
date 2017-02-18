@@ -12,6 +12,8 @@ declare var device: any;
 })
 export class NewPage {
 
+  videoTitle;
+
   constructor(
     public navCtrl: NavController, 
     public alertCtrl: AlertController,
@@ -19,7 +21,15 @@ export class NewPage {
     public platform: Platform) {
   }
 
+  ionViewWillEnter() {
+    this.videoTitle = "";    
+  }
+
   doCapture() {
+    if(!this.videoTitle) {
+      this.showMessage("Notice", "Please eneter a title!");
+      return;
+    }
 	  let options: CaptureVideoOptions = { limit: 1 };
     if (this.platform.is('cordova')) {
       // running on device/emulator
@@ -29,10 +39,13 @@ export class NewPage {
           let video:LocalVideo = {
             originalPath: data[0].fullPath,
             deviceUuid: device.uuid,
-            system: system + '@ ' + device.version
+            system: system + '@ ' + device.version,
+            title: this.videoTitle
           }
           console.log(JSON.stringify(video));
   			  this.videoManager.addVideo(video);
+          this.videoTitle = "";    
+    
       	},
       	(err: CaptureError) => this.showMessage("Error", err.toString())
     	);

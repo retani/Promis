@@ -8,6 +8,16 @@
 
 <ion-content padding>
 
-	<button ion-button full (click)="doCapture()">Start recording</button>
+
+<ion-list>
+  <ion-item>
+    <ion-label fixed>Title</ion-label>
+    <ion-input type="text" value="" [(ngModel)]="videoTitle"></ion-input>
+  </ion-item>
+</ion-list>
+
+<div padding>
+  <button ion-button block (click)="doCapture()">Start recording</button>
+</div>	
 
 </ion-content>

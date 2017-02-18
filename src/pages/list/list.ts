@@ -3,6 +3,8 @@ import { NavController, ActionSheetController, AlertController } from 'ionic-ang
 import { VideoPlayer } from 'ionic-native';
 import { VideoManager } from '../../services/video-manager';
 import { LocalVideo } from 'api/models';
+import {Observable} from 'rxjs';
+declare var device: any;
 
 @Component({
   selector: 'page-list',
@@ -11,6 +13,7 @@ import { LocalVideo } from 'api/models';
 export class ListPage {
 
   videos;
+  remoteVideos;
   
   constructor(
     public navCtrl: NavController, 
@@ -20,7 +23,12 @@ export class ListPage {
   }
 
   ngOnInit() {
-    this.videos = this.videoManager.videos.find({}).zone();
+    this.videos = this.videoManager.videos.find({$or: [{originalPath: {$exists: true}}, {downloaded: true}]})
+      .sample(Observable.interval(250))
+      .zone();
+    this.remoteVideos = this.videoManager.remoteVideos.find({})
+      .sample(Observable.interval(250))
+      .zone();
   }
 
   playVideo(id:string) {
@@ -43,21 +51,11 @@ export class ListPage {
   }
 
   presentActionSheet(id:string) {
-   	console.log(id)
-   	let actionSheet = this.actionSheetCtrl.create({
+   	//console.log(id)
+    let lv = this.videoManager.getVideo(id);
+
+   	let actionSheetOptions = {
      buttons: [
-       {
-         text: 'Transcode',
-         handler: () => {
-           this.videoManager.transcodeVideo(id)
-         }
-       },
-       {
-         text: 'Upload',
-         handler: () => {
-           this.videoManager.uploadVideo(id)
-         }
-       },
        {
          text: 'Remove',
          handler: () => {
@@ -92,10 +90,75 @@ export class ListPage {
            console.log('cancel clicked');
          }
        }
-     ]
-   });
+      ]
+    };
 
-   actionSheet.present();
+     if(!lv.transcoded) {
+       actionSheetOptions.buttons.push(
+         {
+         text: 'Transcode',
+         handler: () => {
+           this.videoManager.transcodeVideo(id)
+         }
+       });
+     }
+
+     if(!lv.uploaded) {
+       actionSheetOptions.buttons.push({
+         text: 'Upload',
+         handler: () => {
+           this.videoManager.uploadVideo(id)
+         }
+       });
+     }
+       
+    let actionSheet = this.actionSheetCtrl.create(actionSheetOptions);
+    actionSheet.present();
   }
 
+  downloaded(id) {
+    let lv = this.videoManager.videos.findOne({remoteId: id});
+    if(lv) {
+      return lv.downloaded;
+    }
+    return false;
+  }
+
+  downloadProgress(id) {
+    let lv = this.videoManager.videos.findOne({remoteId: id});
+    if(lv) {
+      return "downloaded: " + lv.downloadProgress;
+    }
+    return null;
+  }
+
+  checkLocalAuthor(id) {
+    let lv = this.videoManager.videos.findOne({remoteId: id});
+    if(lv && device) {
+      return lv.deviceUuid == device.uuid;
+    }
+    return false;
+  }
+
+  removeRemote(id) {
+    let confirm = this.alertCtrl.create({
+        title: 'Confirm',
+        message: 'Remove this remote video?',
+        buttons: [
+          {
+            text: 'Ok',
+            handler: () => {
+              this.videoManager.removeRemoteVideo(id)
+            }
+          },
+          {
+            text: 'Cancel',
+            handler: () => {
+              console.log('cancel')
+            }
+          }
+        ]
+    });
+    confirm.present();
+  }
 }

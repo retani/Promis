@@ -4,19 +4,34 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
-  <ion-list>
+<ion-content>
+  <ion-item-group>
+    <ion-item-divider color="light">Videos on device</ion-item-divider>
     <ion-card *ngFor="let video of videos | async">
       <ion-card-header>{{video._id}}</ion-card-header>
       <ion-card-content>
         <p>
           <span>transcoded: {{video.transcoded ? "done" : (video.transcodeProgress ? video.transcodeProgress : "no") }}</span>, 
-          <span>uploaded: {{video.uploaded ? "done" : (video.uploadProgress ? video.uploadProgress : "no")  }}</span>       
+          <span>uploaded: {{video.uploaded ? "done" : (video.uploadProgress ? video.uploadProgress : "no")  }}</span>
+          <span>downloaded: {{video.downloaded}} </span> <span>remoteId: {{video.remoteId}}</span>       
         </p>
-        <button ion-button small (click)="playVideo(video._id)">play</button>
+        <button *ngIf="video.transcoded" ion-button small (click)="playVideo(video._id)">play</button>
         <button ion-button small (click)="presentActionSheet(video._id)">options</button>
       </ion-card-content>
-    
     </ion-card>
-  </ion-list>
+  </ion-item-group>
+
+  <ion-item-group>
+    <ion-item-divider color="light">Remote videos</ion-item-divider>
+    <ion-card *ngFor="let remoteVideo of remoteVideos | async">
+      <ion-card-header>{{remoteVideo._id}}</ion-card-header>
+      <ion-card-content>
+        <button *ngIf="!downloaded(remoteVideo._id)" ion-button small (click)="this.videoManager.downloadRemote(remoteVideo._id)">download</button>
+        <button *ngIf="checkLocalAuthor(remoteVideo._id)" ion-button small (click)="removeRemote(remoteVideo._id)">remove</button>
+        {{ downloadProgress(remoteVideo._id) }}
+      </ion-card-content>
+    </ion-card>
+  </ion-item-group>
+
+  
 </ion-content>

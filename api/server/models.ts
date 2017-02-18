@@ -1,22 +1,33 @@
 export interface LocalVideo {
 	_id?: string;
- 	filename?: string;
- 	originalPath?: string;	
+
+	deviceUuid?: string;
+ 	system?: string;
+ 	localAuthor?: boolean;
+
+	originalPath?: string;	
+	filename?: string;
  	transcodeProgress?:number;
  	transcoded?:boolean;
  	transcodedPath?: string;
- 	deviceUuid?: string,
- 	system?: string,
- 	uploadProgress?:number;
+ 	
+	uploadProgress?:number;
  	uploaded?:boolean;
+ 	remoteId?: string;
+
+	downloadProgress?:number;
+ 	downloaded?: boolean;
 }
 
 export interface RemoteVideo {
 	_id?: string;
- 	deviceUuid?: string,
- 	system?: string
- 	remoteUri?: string;
- 	downloadProgress?:number;
- 	downloaded?: boolean;
- 	localPath?: string;	
+	
+	url?: string;
+	relativeUrl?: string;
+ 	filename?: string;	
+ 	type?: string;
+ 	size?: number;
+
+ 	deviceUuid?: string;
+ 	system?: string;
 }

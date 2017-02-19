@@ -1,7 +1,7 @@
 import { VideoEditor, Transfer } from 'ionic-native';
 import { Injectable } from '@angular/core';
 import { MongoObservable } from 'meteor-rxjs';
-import { LocalVideo } from 'api/models';
+import { LocalVideo, LocalSettings } from 'api/models';
 import { LocalPersist } from 'meteor/jeffm:local-persist'
 import { RemoteVideos } from 'api/collections'
 import { Observable } from 'rxjs';
@@ -13,11 +13,17 @@ declare var device: any;
 @Injectable()
 export class VideoManager {
   
+  private localSettings;
+  private localSettingsObserver;
   private localVideos;
   private localVideosObserver;
   private s3Uploads;
   
   constructor() {
+
+    this.localSettings = new MongoObservable.Collection<LocalSettings>('localsettings', {connection: null});
+    this.localSettingsObserver = new LocalPersist(this.localSettings.collection, 'promis-localsettings');
+    
     this.localVideos = new MongoObservable.Collection<LocalVideo>('localvideos', {connection: null});
     this.localVideosObserver = new LocalPersist(this.localVideos.collection, 'promis-localvideos');
   
@@ -36,6 +42,19 @@ export class VideoManager {
         }
       });  
     });
+  }
+
+  get settings():LocalSettings {
+    let settings = this.localSettings.findOne({name: "default"});
+    if(!settings) {
+      let id = this.localSettings.collection.insert({name: "default"});
+      settings = this.localSettings.collection.findOne(id);
+    }
+    return settings;
+  }
+
+  updateSettings(settings: LocalSettings) {
+    this.localSettings.collection.update({name: settings.name}, settings);
   }
 
   get remoteVideos() {

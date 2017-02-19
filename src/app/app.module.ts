@@ -6,6 +6,8 @@ import { MapPage } from '../pages/map/map';
 import { NewPage } from '../pages/new/new';
 import { TabsPage } from '../pages/tabs/tabs';
 import { VideoManager } from '../services/video-manager';
+import { MapOptionsComponent } from '../pages/map/map-options';
+
 
 @NgModule({
   declarations: [
@@ -13,7 +15,8 @@ import { VideoManager } from '../services/video-manager';
     ListPage,
     MapPage,
     NewPage,
-    TabsPage
+    TabsPage,
+    MapOptionsComponent
   ],
   imports: [
     IonicModule.forRoot(MyApp)
@@ -24,7 +27,8 @@ import { VideoManager } from '../services/video-manager';
     ListPage,
     MapPage,
     NewPage,
-    TabsPage
+    TabsPage,
+    MapOptionsComponent
   ],
   providers: [{provide: ErrorHandler, useClass: IonicErrorHandler}, VideoManager]
 })

@@ -37,3 +37,11 @@ export interface RemoteVideo {
  	deviceUuid?: string;
  	system?: string;
 }
+
+export interface LocalSettings {
+	_id?: string;
+	name: string;
+	currentLat: number;
+	currentLng: number;
+	currentZoom: number;
+}

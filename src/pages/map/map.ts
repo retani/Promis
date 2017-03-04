@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { MapOptionsComponent } from './map-options';
 import { Platform, NavController, PopoverController } from 'ionic-angular';
 import { Geolocation } from 'ionic-native';
@@ -9,8 +9,8 @@ import 'leaflet';
 import 'leaflet.offline';
 
 const DEFAULT_ZOOM = 10;
-const DEFAULT_LAT = 51.678418;
-const DEFAULT_LNG = 7.809007;
+const DEFAULT_LAT = 64.1842953;
+const DEFAULT_LNG = -51.730436;
 const EQUATOR = 40075004;
 
 declare namespace L {
@@ -21,7 +21,6 @@ declare namespace L.tileLayer {
 }
 declare namespace L.control {
     function savetiles(baseLayer:any, options: any): any;
-    function layers(options: any): any;
 }
 
 
@@ -61,14 +60,14 @@ export class MapPage {
         { 
           attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>',
           subdomains: ['a', 'b', 'c'],
-          minZoom: 8,
+          minZoom: 7,
           maxZoom: 18
         }
         ).addTo(this.map);
 
         //add buttons to save tiles in area viewed
         this.saveTiles = L.control.savetiles(baseLayer, {
-            'zoomlevels': [13, 16], //optional zoomlevels to save, default current zoomlevel
+            'zoomlevels': [16, 17, 18], //optional zoomlevels to save, default current zoomlevel
             'confirm': function(layer, succescallback) {
                 if (window.confirm("Save " + layer._tilesforSave.length)) {
                     succescallback();

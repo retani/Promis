@@ -1,6 +1,5 @@
 import { Component, Injectable } from '@angular/core';
-import { Alert, AlertController, NavController, ViewController } from 'ionic-angular';
-import { MapPage } from './map'
+import { AlertController, NavController, ViewController } from 'ionic-angular';
 
 @Component({
   selector: 'map-options',

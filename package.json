@@ -29,7 +29,8 @@
     "ionic-native": "2.4.1",
     "ionicons": "3.0.0",
     "leaflet": "^1.0.3",
-    "leaflet.offline": "git+https://github.com/allartk/leaflet.offline.git#v0.1.0-beta.3",
+    "leaflet.offline": "git+https://github.com/allartk/leaflet.offline.git#v0.1.0-beta.5",
+    
     "localforage": "^1.4.3",
     "meteor-node-stubs": "^0.2.5",
     "meteor-rxjs": "0.4.6",

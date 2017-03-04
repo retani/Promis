@@ -22,8 +22,6 @@ declare namespace L.tileLayer {
 declare namespace L.control {
     function savetiles(baseLayer:any, options: any): any;
     function layers(options: any): any;
-    function _saveTiles(): any;
-    function _rmTiles(): any;
 }
 
 
@@ -58,11 +56,13 @@ export class MapPage {
   loadMap(){
     if(!this.map) {
         this.map = L.map('map');
-        var baseLayer =  L.tileLayer.offline('http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+ 
+        var baseLayer =  L.tileLayer.offline('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
         { 
-          attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>',
           subdomains: ['a', 'b', 'c'],
-          minZoom: 8
+          minZoom: 8,
+          maxZoom: 18
         }
         ).addTo(this.map);
 

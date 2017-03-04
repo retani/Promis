@@ -7,19 +7,21 @@
 <ion-content>
   <ion-item-group>
     <ion-item-divider color="light">Videos on device</ion-item-divider>
-    <ion-card *ngFor="let video of videos | async">
-      <img class="video-thumbnail" src="{{video.thumbPath}}"/>
-      <ion-card-header>{{video.title ? video.title : video._id}}</ion-card-header>
-      <ion-card-content>
-        <p>
-          <span>transcoded: {{video.transcoded ? "done" : (video.transcodeProgress ? video.transcodeProgress : "no") }}</span>, 
-          <span>uploaded: {{video.uploaded ? "done" : (video.uploadProgress ? video.uploadProgress : "no")  }}</span>
-          <span>downloaded: {{video.downloaded}} </span> <span>remoteId: {{video.remoteId}}</span>       
-        </p>
-        <button *ngIf="video.transcoded" ion-button small (click)="playVideo(video._id)">play</button>
-        <button ion-button small (click)="presentActionSheet(video._id)">options</button>
-      </ion-card-content>
-    </ion-card>
+    <ng-container *ngFor="let video of videos | async">
+      <ion-card *ngIf="video.downloaded || video.localOrigin">
+        <img class="video-thumbnail" src="{{video.thumbPath}}"/>
+        <ion-card-header>{{video.title ? video.title : video._id}}</ion-card-header>
+        <ion-card-content>
+          <p>
+            <span>transcoded: {{video.transcoded ? "done" : (video.transcodeProgress ? video.transcodeProgress : "no") }}</span>, 
+            <span>uploaded: {{video.uploaded ? "done" : (video.uploadProgress ? video.uploadProgress : "no")  }}</span>
+            <span>downloaded: {{video.downloaded}} </span> <span>remoteId: {{video.remoteId}}</span>       
+          </p>
+          <button *ngIf="video.transcoded" ion-button small (click)="playVideo(video._id)">play</button>
+          <button ion-button small (click)="presentActionSheet(video._id)">options</button>
+        </ion-card-content>
+      </ion-card>
+    </ng-container>
   </ion-item-group>
 
   <ion-item-group>

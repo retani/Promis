@@ -4,7 +4,6 @@ import { MongoObservable } from 'meteor-rxjs';
 import { LocalVideo, LocalSettings } from 'api/models';
 import { LocalPersist } from 'meteor/jeffm:local-persist'
 import { RemoteVideos } from 'api/collections'
-import { Observable } from 'rxjs';
 declare var S3:any;
 declare var window: any;
 declare var cordova: any;
@@ -17,6 +16,7 @@ export class VideoManager {
   private localSettingsObserver;
   private localVideos;
   private localVideosObserver;
+  private remoteVideoObservable;
   private s3Uploads;
   
   constructor() {
@@ -27,17 +27,24 @@ export class VideoManager {
     this.localVideos = new MongoObservable.Collection<LocalVideo>('localvideos', {connection: null});
     this.localVideosObserver = new LocalPersist(this.localVideos.collection, 'promis-localvideos');
   
+    this.remoteVideoObservable = RemoteVideos;
+
     // observe uploads collection in S3 package and transfer upload progress
     this.s3Uploads = new MongoObservable.Collection(S3.collection);
     this.s3Uploads.find({})
-    .sample(Observable.interval(500))
+    .debounceTime(500)
     .subscribe(files => {
       files.forEach((file) => {
-        if(file.type == "video/mp4") {
-          let video = this.findVideo({filename: file.file.original_name})
+        console.log(JSON.stringify(file));
+        if(file.file.type == "video/mp4") {
+          let video = this.findVideo({transcodedFilename: file.file.original_name})
+          console.log(JSON.stringify(video));
           if(video) {
-            video.uploadProgress = file.percent_uploaded;
-            this.updateVideo(video);    
+            if(file.percent_uploaded > video.uploadProgress || !video.uploadProgress) {
+              console.log("updating");
+              video.uploadProgress = file.percent_uploaded;
+              this.updateVideo(video);    
+            }
           }
         }
       });  
@@ -58,7 +65,7 @@ export class VideoManager {
   }
 
   get remoteVideos() {
-    return RemoteVideos
+    return this.remoteVideoObservable;
   }
 
   get videos() {
@@ -111,9 +118,10 @@ export class VideoManager {
   transcodeVideo(id: string) {
     let video = this.getVideo(id)
     let self = this;
+    let transcodedFilename = "transcode_" + video._id;
     let options = {
       fileUri: video.originalPath,
-      outputFileName: "transcode_" + video._id,
+      outputFileName: transcodedFilename,
       outputFileType: VideoEditor.OutputFileType.MPEG4,
       optimizeForNetworkUse: VideoEditor.OptimizeForNetworkUse.YES,
       saveToLibrary: true,
@@ -137,6 +145,7 @@ export class VideoManager {
         console.log('video transcode success, saving to: ' + fileUri);
         video.transcoded = true;
         video.transcodedPath = fileUri;
+        video.transcodedFilename = transcodedFilename + ".mp4";
         this.updateVideo(video);
       })
       .catch((error: any) => console.log('video transcode error ' + JSON.stringify(error)));
@@ -243,11 +252,12 @@ export class VideoManager {
         system: rv.system,
         localAuthor: (rv.deviceUuid == device.uuid),
 
-        filename: rv.filename,
+        transcodedFilename: rv.filename,
         transcoded: false,
         uploaded: false,
        
         downloadProgress: 0,
+        downloading: true,
         downloaded: false,
       })      
     let lv = this.getVideo(localId);
@@ -257,10 +267,14 @@ export class VideoManager {
     let url = rv.url;
     let self = this;
     fileTransfer.onProgress((data) => {
-      console.log(JSON.stringify(data));
+      //console.log(JSON.stringify(data));
       if(data.lengthComputable) {
         let progress = data.loaded / data.total;
-        self.localVideos.collection.update({_id: lvId}, {$set: {downloadProgress: progress}});
+        console.log(progress + " " + self.getVideo(lvId).downloadProgress);
+        if(progress - self.getVideo(lvId).downloadProgress > 0.01) {
+          console.log("update");
+          self.localVideos.collection.update({_id: lvId}, {$set: {downloadProgress: progress}});
+        }
       }
     })
     fileTransfer.download(url, cordova.file.dataDirectory + rv.filename).then((entry) => {
@@ -268,6 +282,7 @@ export class VideoManager {
         console.log('download complete: ' + entry.toURL());
         lv.transcoded = true;
         lv.transcodedPath = entry.toURL();        
+        lv.downloading = false;
         lv.downloaded = true;
         lv.thumbPath = entryThumb.toURL();
         this.updateVideo(lv);

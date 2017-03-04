@@ -37,6 +37,7 @@ export class NewPage {
       	(data: MediaFile[]) => {
           let system = this.platform.is('ios') ? 'ios' : (this.platform.is('android') ? 'android' : 'windows');
           let video:LocalVideo = {
+            localOrigin: true,
             originalPath: data[0].fullPath,
             deviceUuid: device.uuid,
             system: system + '@ ' + device.version,

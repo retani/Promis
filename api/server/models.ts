@@ -7,16 +7,19 @@ export interface LocalVideo {
  	system?: string;
  	localAuthor?: boolean;
 
-	originalPath?: string;	
-	filename?: string;
- 	transcodeProgress?:number;
+	localOrigin?: boolean;
+	originalPath?: string;
+		
+	transcodeProgress?:number;
  	transcoded?:boolean;
  	transcodedPath?: string;
+ 	transcodedFilename?: string;
  	
 	uploadProgress?:number;
  	uploaded?:boolean;
  	remoteId?: string;
 
+ 	downloading?: boolean;
 	downloadProgress?:number;
  	downloaded?: boolean;
 }
